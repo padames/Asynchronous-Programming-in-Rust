@@ -1,5 +1,6 @@
-#![feature(naked_functions)]
+//#![feature(naked_functions)]
 use std::arch::asm;
+use std::arch::naked_asm;
 
 const DEFAULT_STACK_SIZE: usize = 1024 * 1024 * 2;
 const MAX_THREADS: usize = 4;
@@ -139,9 +140,10 @@ fn guard() {
     };
 }
 
-#[naked]
+#[unsafe(naked)]
 unsafe extern "C" fn skip() {
-    asm!("ret", options(noreturn))
+    //naked_asm!("ret", options(noreturn))
+    naked_asm!("ret")
 }
 
 pub fn yield_thread() {
@@ -151,11 +153,11 @@ pub fn yield_thread() {
     };
 }
 
-#[naked]
+#[unsafe(naked)]
 #[no_mangle]
 #[cfg_attr(target_os = "macos", export_name = "\x01switch")] // see: How-to-MacOS-M.md for explanation
 unsafe extern "C" fn switch() {
-    asm!(
+    naked_asm!(
         "mov [rdi + 0x00], rsp",
         "mov [rdi + 0x08], r15",
         "mov [rdi + 0x10], r14",
@@ -171,7 +173,7 @@ unsafe extern "C" fn switch() {
         "mov rbx, [rsi + 0x28]",
         "mov rbp, [rsi + 0x30]",
         "ret",
-        options(noreturn)
+//        options(noreturn)
     );
 }
 
