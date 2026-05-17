@@ -1,6 +1,4 @@
-//#![feature(naked_functions)]
-use std::arch::asm;
-use std::arch::naked_asm;
+use std::arch::{asm,naked_asm};
 
 const DEFAULT_STACK_SIZE: usize = 1024 * 1024 * 2;
 const MAX_THREADS: usize = 4;
