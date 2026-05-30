@@ -133,9 +133,9 @@ impl Runtime {
             let s_ptr = (s_ptr as usize & !15) as *mut u8;
             available.task = Some(Box::new(f));
             available.ctx.thread_ptr = available as *const Thread as u64;
-            std::ptr::write(s_ptr.offset(-16) as *mut u64, guard as u64);
-            std::ptr::write(s_ptr.offset(-24) as *mut u64, skip as u64);
-            std::ptr::write(s_ptr.offset(-32) as *mut u64, call as u64); // changed
+            std::ptr::write(s_ptr.offset(-16) as *mut u64, guard as *const () as u64);
+            std::ptr::write(s_ptr.offset(-24) as *mut u64, skip as *const () as u64);
+            std::ptr::write(s_ptr.offset(-32) as *mut u64, call as *const () as u64); // changed
             available.ctx.rsp = s_ptr.offset(-32) as u64;
             available.state = State::Ready;
         }
@@ -151,8 +151,8 @@ fn call(thread: u64) {
 }
 
 #[unsafe(naked)]
-unsafe fn skip() {
-    naked_asm!("ret", options(noreturn))
+extern "C" fn skip() {
+    naked_asm!("ret")
 }
 
 // this function is changed
@@ -174,7 +174,7 @@ pub fn yield_thread() {
 #[unsafe(naked)]
 #[no_mangle]
 #[cfg_attr(target_os = "macos", export_name = "\x01switch")]
-unsafe fn switch() {
+extern "C" fn switch() {
     naked_asm!(
         "mov 0x00[rdi], rsp",
         "mov 0x08[rdi], r15",
@@ -191,8 +191,7 @@ unsafe fn switch() {
         "mov rbx, 0x28[rsi]",
         "mov rbp, 0x30[rsi]",
         "mov rdi, 0x38[rsi]",
-        "ret",
-        options(noreturn)
+        "ret"
     );
 }
 
